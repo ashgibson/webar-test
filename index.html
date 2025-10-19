@@ -17,8 +17,9 @@
       arjs="debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3;"
     >
       <a-assets>
-        <img id="asset1" src="assets/product1.png" crossorigin="anonymous" />
-        <img id="asset2" src="assets/product2.webp" crossorigin="anonymous" />
+        <img id="asset1" src="assets/handwash.png" crossorigin="anonymous" />
+        <img id="asset2" src="assets/babywipes.webp" crossorigin="anonymous" />
+        <img id="asset3" src="assets/water.webp" crossorigin="anonymous" />
       </a-assets>
 
       <a-marker type="barcode" value="0">
@@ -28,7 +29,7 @@
           height="2"
           position="0 0.5 0" light="type:directional; castShadow:true;" look-at="#cam"
         />
-                <a-entity position="1 1 1" look-at="#cam" text="value: Hand wash; align: center; color: black; width: 4;" light="type:directional; castShadow:true;" />
+                <a-entity position="1 1 1" look-at="#cam" text="value: Hand wash; align: center; color: black; width: 4;" />
         </a-entity>
       </a-marker>
 
@@ -43,12 +44,12 @@
         <a-entity
     position="0 1.2 0"
     look-at="#cam"
-    text="value: Body Lotion Refill; align: center; color: black; width: 4;" />
+    text="value: Baby Wipes; align: center; color: black; width: 4;" />
       </a-marker>
 
 <a-marker type="barcode" value="2">
         <a-image
-          src="#asset2"
+          src="#asset3"
           width="2"
           height="2"
           position="0 0.5 0"
@@ -57,7 +58,7 @@
         <a-entity
     position="0 1.2 0"
     look-at="#cam"
-    text="value: Body Lotion Refill; align: center; color: black; width: 4;" />
+    text="value: Water; align: center; color: black; width: 4;" />
       </a-marker>
 
 <!--
@@ -86,7 +87,7 @@
       </a-marker>
 -->
       <!-- use this <a-entity camera> to support multiple-markers, otherwise use <a-marker-camera> instead of </a-marker> -->
-      <a-entity  camera  position="0 0 0" id="cam"></a-entity>
+      <a-entity camera position="0 0 0" id="cam"></a-entity>
     </a-scene>
   </body>
 </html>
