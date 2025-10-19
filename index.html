@@ -1,65 +1,126 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
-    <meta
-      name="viewport"
-      content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0"
-    />
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
+    <title>AR.js Barcode Markers (Refactor)</title>
+    <!-- A-Frame & components -->
+    <script defer src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
+    <script defer src="https://unpkg.com/aframe-look-at-component@1.0.0/dist/aframe-look-at-component.min.js"></script>
+    <script defer src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+    <style>
+      html, body { margin: 0; height: 100%; overflow: hidden; }
+    </style>
   </head>
-  <script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
-  <script src="https://unpkg.com/aframe-look-at-component@1.0.0/dist/aframe-look-at-component.min.js"></script>
-  <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
-
-  <body style="margin: 0px; overflow: hidden">
-    <!-- we add detectionMode and matrixCodeType to tell AR.js to recognize barcode markers -->
+  <body>
     <a-scene
+      id="scene"
       embedded
+      vr-mode-ui="enabled: false"
       arjs="debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3;"
     >
-      <a-assets>
-        <img id="asset1" src="assets/shampoo.png" crossorigin="anonymous" />
-        <img id="asset2" src="assets/babywipes.webp" crossorigin="anonymous" />
-        <img id="asset3" src="assets/water.webp" crossorigin="anonymous" />
-      </a-assets>
+      <!-- Populated by script -->
+      <a-assets id="assets"></a-assets>
 
-      <a-marker type="barcode" value="0">
-        <a-image
-          src="#asset1"
-          height="3"
-          position="0 0.5 0" light="type:directional; castShadow:true;" look-at="#cam"
-        />
-                <a-entity position="0 1.2 0" look-at="#cam" text="value: Hand wash; align: center; color: black; width: 4;" />
-        </a-entity>
-      </a-marker>
-
-      <a-marker type="barcode" value="1">
-        <a-image
-          src="#asset2"
-          height="3"
-          position="0 0.5 0"
-          look-at="#cam"
-        />
-        <a-entity
-    position="0 1.2 0"
-    look-at="#cam"
-    text="value: Baby Wipes; align: center; color: black; width: 4;" />
-      </a-marker>
-
-    <a-marker type="barcode" value="2">
-        <a-image
-          src="#asset3"
-          height="3"
-          position="0 0.5 0"
-          look-at="#cam"
-        />
-        <a-entity
-    position="0 1.2 0"
-    look-at="#cam"
-    text="value: Water; align: center; color: black; width: 4;" />
-      </a-marker>
-
-      <!-- use this <a-entity camera> to support multiple-markers, otherwise use <a-marker-camera> instead of </a-marker> -->
-      <a-entity camera position="0 0 0" id="cam"></a-entity>
+      <!-- Global lights (tied to camera so images read well) -->
+      <a-entity id="rig">
+        <a-entity id="cam" camera position="0 0 0"></a-entity>
+      </a-entity>
     </a-scene>
+
+    <script>
+      // Strict mode for safer JS
+      'use strict';
+
+      /**
+       * Configuration: add/adjust items here rather than duplicating markup.
+       */
+      const ITEMS = [
+        { id: 'asset1', src: 'assets/babyshampoo.webp',  label: 'Baby Shampoo',  barcode: 0 },
+        { id: 'asset2', src: 'assets/babywipes.webp', label: 'Baby Wipes', barcode: 1 },
+        { id: 'asset3', src: 'assets/bodylotionrefill.webp', label: 'Body Lotion', barcode: 2 },
+        { id: 'asset4', src: 'assets/bodywash.webp', label: 'Body Wash', barcode: 3 },
+        { id: 'asset5', src: 'assets/conditioner.webp', label: 'Conditioner', barcode: 4 },
+        { id: 'asset6', src: 'assets/disinfectant.webp', label: 'Disinfectant', barcode: 5 },
+        { id: 'asset7', src: 'assets/handwash.png', label: 'Hand Wash', barcode: 6 },
+        { id: 'asset8', src: 'assets/nappybalm.webp', label: 'Nappy Balm', barcode: 7 },
+        { id: 'asset9', src: 'assets/shampoo.png', label: 'Shampoo', barcode: 8 },
+        { id: 'asset10', src: 'assets/water.webp', label: 'Water', barcode: 9 },
+      ];
+
+      const IMAGE_SIZE = { height: 1, y: 0.5 };
+      const LABEL_Y = 1.5;
+
+      // Utility: create an element with attributes in one go
+      function el(name, attrs = {}, children = []) {
+        const node = document.createElement(name);
+        for (const [k, v] of Object.entries(attrs)) node.setAttribute(k, v);
+        for (const c of children) node.appendChild(c);
+        return node;
+      }
+
+      function createAssets() {
+        const assets = document.getElementById('assets');
+        for (const { id, src } of ITEMS) {
+          assets.appendChild(el('img', { id, src, crossorigin: 'anonymous' }));
+        }
+      }
+
+      function createMarker({ id, label, barcode }) {
+        const marker = el('a-marker', { type: 'barcode', value: String(barcode) });
+
+        // Image plane
+        const img = el('a-image', {
+          src: `#${id}`,
+          height: IMAGE_SIZE.height,
+          position: `0 ${IMAGE_SIZE.y} 0`,
+          'look-at': '#cam',
+        });
+
+        // Floating label (always faces camera)
+        const text = el('a-entity', {
+          position: `0 ${LABEL_Y} 0`,
+          'look-at': '#cam',
+          text: `value: ${label}; align: center; color: black; width: 4;`,
+        });
+
+        marker.appendChild(img);
+        marker.appendChild(text);
+
+        // Optional: add simple visibility logging for debugging
+        marker.addEventListener('markerFound', () => console.debug(`[marker ${barcode}] found`));
+        marker.addEventListener('markerLost',  () => console.debug(`[marker ${barcode}] lost`));
+
+        return marker;
+      }
+
+      function createMarkers() {
+        const scene = document.getElementById('scene');
+        for (const item of ITEMS) scene.appendChild(createMarker(item));
+      }
+
+      // Guard: wait for A-Frame to be available and scene to be ready
+      function onSceneReady(cb) {
+        if (AFRAME && AFRAME.scenes && AFRAME.scenes[0] && AFRAME.scenes[0].hasLoaded) return cb();
+        document.querySelector('a-scene').addEventListener('loaded', cb, { once: true });
+      }
+
+      // Kick-off
+      window.addEventListener('DOMContentLoaded', () => {
+        // Basic runtime checks
+        if (!window.AFRAME) {
+          console.error('A-Frame failed to load.');
+          return;
+        }
+
+        createAssets();
+        onSceneReady(() => {
+          createMarkers();
+          // Try to surface common camera permission issues with AR.js
+          const arSystem = document.querySelector('a-scene').systems && document.querySelector('a-scene').systems['arjs'];
+          if (!arSystem) console.warn('AR.js system not found. Verify ar.js script and attributes.');
+        });
+      });
+    </script>
   </body>
 </html>
